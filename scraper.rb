@@ -1,6 +1,8 @@
 #!/bin/env ruby
 # encoding: utf-8
 
+# Based on original at https://github.com/dracos/scraper-sweden-riksdagen/blob/master/scraper.py
+
 require 'scraperwiki'
 require 'nokogiri'
 require 'colorize'
