@@ -13,10 +13,23 @@ def noko_for(url)
 end
 
 GENDER = {
-  kvinna: 'female',
-  man: 'male',
+  "kvinna" => 'female',
+  "man" => 'male',
 }
 
+PARTY = { 
+  ''   => '', 
+  '-'  => 'Independent',
+  'C'  => 'Centerpartiet',
+  'FP' => 'Folkpartiet liberalerna ',
+  'KD' => 'Kristdemokraterna',
+  'L'  => 'Liberalerna',
+  'M'  => 'Moderata samlingspartiet',
+  'MP' => 'Miljöpartiet de gröna',
+  'S'  => 'Socialdemokraterna',
+  'SD' => 'Sverigedemokraterna',
+  'V'  => 'Vänsterpartiet',
+}
 
 def parse_person(p)
   field = ->(n) { p.at_xpath("./#{n}").text.to_s }
@@ -25,8 +38,11 @@ def parse_person(p)
 
   data = { 
     id: field.('intressent_id'),
+    party_id: field.('parti'),
+    party: PARTY[field.('parti')],
+    constituency: field.('valkrets'),
     birth_date: field.('fodd_ar') ,
-    gender: GENDER[field.('kon').to_sym],
+    gender: GENDER[field.('kon')],
     name: "%s %s" % [field.('tilltalsnamn'), field.('efternamn')],
     family_name: field.('efternamn'),
     given_name: field.('tilltalsnamn'),
@@ -43,8 +59,6 @@ def parse_person(p)
     data[:death_date] = $1
   end
 
-  party = field.('parti') 
-  constituency = field.('valkrets')
 
   mem_info = { 
     'Tjänstgörande' => p.xpath('./personuppdrag//uppdrag[roll_kod="Riksdagsledamot"]'),
@@ -68,7 +82,6 @@ def parse_person(p)
       end
 
       row = data.merge(rec)
-      # warn row
       ScraperWiki.save_sqlite([:id, :term, :start_date], data.merge(row))
     end
   end
@@ -96,7 +109,8 @@ term_dates = %w( 1976-10-04
 }
 ScraperWiki.save_sqlite([:id], @terms, 'terms')
 
-xml_file = 'formatted.xml'
+# xml_file = 'formatted.xml'
+# noko = noko_for(xml_file)
 noko = noko_for('http://data.riksdagen.se/personlista/?iid=&fnamn=&enamn=&f_ar=&kn=&parti=&valkrets=&rdlstatus=samtliga&org=&utformat=xml&termlista=')
 noko.xpath('//person').each { |p| parse_person(p) }
 
