@@ -5,9 +5,11 @@ require 'scraperwiki'
 require 'nokogiri'
 require 'colorize'
 require 'pry'
+require 'open-uri'
 
 def noko_for(url)
-  Nokogiri::XML(url)
+  warn "Fetching #{url}"
+  Nokogiri::XML(open(url).read)
 end
 
 GENDER = {
@@ -66,6 +68,7 @@ def parse_person(p)
       end
 
       row = data.merge(rec)
+      # warn row
       ScraperWiki.save_sqlite([:id, :term, :start_date], data.merge(row))
     end
   end
@@ -94,6 +97,6 @@ term_dates = %w( 1976-10-04
 ScraperWiki.save_sqlite([:id], @terms, 'terms')
 
 xml_file = 'formatted.xml'
-noko = File.open(xml_file) { |f| Nokogiri::XML(f) }
+noko = noko_for('http://data.riksdagen.se/personlista/?iid=&fnamn=&enamn=&f_ar=&kn=&parti=&valkrets=&rdlstatus=samtliga&org=&utformat=xml&termlista=')
 noko.xpath('//person').each { |p| parse_person(p) }
 
