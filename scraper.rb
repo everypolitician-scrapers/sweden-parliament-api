@@ -61,14 +61,13 @@ def parse_person(p)
 
 
   mem_info = { 
-    'Tjänstgörande' => p.xpath('./personuppdrag//uppdrag[roll_kod="Riksdagsledamot"]'),
-    'Ersättare' => p.xpath('./personuppdrag//uppdrag[roll_kod="Ersättare"]')
+    'Tjänstgörande' => p.xpath('./personuppdrag//uppdrag[roll_kod="Riksdagsledamot"][status="Tjänstgörande"]'),
+    'Ersättare' => p.xpath('./personuppdrag//uppdrag[roll_kod="Ersättare"][status="Ersättare"]')
   }
 
   mem_info.each do |type, mems|
     mems.each do |mem|
       mfield = ->(n) { mem.at_xpath("./#{n}").text.to_s }
-      next unless mfield.('status') == type
       rec = { 
         start_date: mfield.('from'),
         end_date: mfield.('tom'),
