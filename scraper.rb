@@ -88,7 +88,10 @@ def parse_person(p)
 end
 
 def term_for(mem)
-  term = @terms.find { |t| mem[:start_date] <= t[:end_date] && mem[:end_date] >= t[:start_date] } or return
+  term = @terms.find { |t| 
+    mem[:start_date].between?(t[:start_date], t[:end_date]) && 
+      mem[:end_date].between?(t[:start_date], t[:end_date]) 
+  } or return
   term[:id]
 end
 
