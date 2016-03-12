@@ -59,30 +59,27 @@ def parse_person(p)
     data[:death_date] = $1
   end
 
+  parl_mems = p.xpath('./personuppdrag//uppdrag[organ_kod="kam"]')
+  parl_mems.each do |mem|
+    mfield = ->(n) { mem.at_xpath("./#{n}").text.to_s }
 
-  mem_info = { 
-    'Tjänstgörande' => p.xpath('./personuppdrag//uppdrag[roll_kod="Riksdagsledamot"][status="Tjänstgörande"]'),
-    'Ersättare' => p.xpath('./personuppdrag//uppdrag[roll_kod="Ersättare"][status="Ersättare"]')
-  }
+    next unless %w(Tjänstgörande Ersättare).include? mfield.('status')
+    next unless %w(Riksdagsledamot Ersättare).include? mfield.('roll_kod')
 
-  mem_info.each do |type, mems|
-    mems.each do |mem|
-      mfield = ->(n) { mem.at_xpath("./#{n}").text.to_s }
-      rec = { 
-        start_date: mfield.('from'),
-        end_date: mfield.('tom'),
-      }
-      next if rec[:start_date] < @terms.first[:start_date]
+    rec = { 
+      start_date: mfield.('from'),
+      end_date: mfield.('tom'),
+    }
+    next if rec[:start_date] < @terms.first[:start_date]
 
-      rec[:substitute] = mfield.('uppgift') if type == 'Ersättare'
-      unless rec[:term] = term_for(rec) 
-        warn("Invalid dates: #{rec}") 
-        next
-      end
-
-      row = data.merge(rec)
-      ScraperWiki.save_sqlite([:id, :term, :start_date], data.merge(row))
+    rec[:substitute] = mfield.('uppgift') if mfield.('status') == 'Ersättare'
+    unless rec[:term] = term_for(rec) 
+      warn("Invalid dates: #{rec}") 
+      next
     end
+
+    row = data.merge(rec)
+    ScraperWiki.save_sqlite([:id, :term, :start_date], data.merge(row))
   end
 end
 
@@ -112,7 +109,7 @@ term_dates = %w( 1976-10-04
 ScraperWiki.save_sqlite([:id], @terms, 'terms')
 
 # xml_file = 'formatted.xml'
-# noko = noko_for(xml_file)
+# noko = noko_for(xml_file)
 noko = noko_for('http://data.riksdagen.se/personlista/?iid=&fnamn=&enamn=&f_ar=&kn=&parti=&valkrets=&rdlstatus=samtliga&org=&utformat=xml&termlista=')
 noko.xpath('//person').each { |p| parse_person(p) }
 
