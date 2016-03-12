@@ -62,9 +62,7 @@ def parse_person(p)
   parl_mems = p.xpath('./personuppdrag//uppdrag[organ_kod="kam"]')
   parl_mems.each do |mem|
     mfield = ->(n) { mem.at_xpath("./#{n}").text.to_s }
-
     next unless %w(Tjänstgörande Ersättare).include? mfield.('status')
-    next unless %w(Riksdagsledamot Ersättare).include? mfield.('roll_kod')
 
     rec = { 
       start_date: mfield.('from'),
