@@ -20,7 +20,6 @@ GENDER = {
 }
 
 PARTY = { 
-  ''   => '', 
   '-'  => 'Independent',
   'C'  => 'Centerpartiet',
   'FP' => 'Folkpartiet liberalerna ',
@@ -41,7 +40,7 @@ def parse_person(p)
   data = { 
     id: field.('intressent_id'),
     party_id: field.('parti'),
-    party: PARTY[field.('parti')],
+    party: PARTY.fetch(field.('parti'), 'Independent'),
     constituency: field.('valkrets'),
     birth_date: field.('fodd_ar') ,
     gender: GENDER[field.('kon')],
@@ -57,6 +56,8 @@ def parse_person(p)
     image: field.('bild_url_max'),
     source: field.('person_url_xml'),
   }
+  data[:party_id] = 'IND' if data[:party] == 'Independent'
+
   if field.('status').match(/Avliden\s+(\d{4}-\d{2}-\d{2})/)
     data[:death_date] = $1
   end
